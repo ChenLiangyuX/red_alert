@@ -1,11 +1,18 @@
+// Red alreat for Haojing deploying(and other things)
+// ver 1.1.0
+// originally composed by zhaojun
+// modified by zhujun 2013-01-15
 
 #include <SPI.h>
 #include <Ethernet.h>
 
+//toggle debug
+#define DEBUG 0
+
 EthernetClient client;
 
 //deploy server
-char server[] = "baixing.com";
+char server[] = "deploy.baixing.com";
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 IPAddress ip(192, 168, 8, 222);
@@ -18,15 +25,15 @@ int output_pin = 8;
 
 unsigned long lastConnectionTime = 0;
 boolean lastConnected = false;
-const unsigned long postingInterval = 10 * 1000; //every 6 seconds
+const unsigned long postingInterval = 10 * 1000; //every 10 seconds
 
 void setup() {
-  Serial.begin(9600);
+  if (DEBUG) Serial.begin(115200);
   
   Ethernet.begin(mac, ip, dns_server, gateway, subnet);
 
-  Serial.print("Begin with: ");
-  Serial.println(Ethernet.localIP());
+  if (DEBUG) Serial.print("Begin with: ");
+  if (DEBUG) Serial.println(Ethernet.localIP());
   
   pinMode(output_pin, OUTPUT);
 
@@ -52,8 +59,9 @@ void loop() {
       if (c == '\n') {
         // you're starting a new line
         currentLineIsBlank = true;
-
-        if (currentLine.substring(0, 11) == "Deploy: ing") {
+        if (DEBUG) Serial.print(currentLine);
+        if (DEBUG) Serial.println(currentLine.indexOf("Someone is doing:"));
+        if (currentLine.indexOf("Someone is doing:") > -1) {
           is_deploying = true;
         }
 
@@ -65,17 +73,18 @@ void loop() {
   }
 
   if (is_deploying) {
-    Serial.println("depolying");
+    if (DEBUG) Serial.println("depolying");
     is_deploying = false;
     alarm();
-    //may delay 120 sec for skip this depolying
+    // may delay 120 sec for skip this depolying, not acurate
     //delay(120000);
   }
 
   if (!client.connected() && lastConnected) {
-    Serial.println();
-    Serial.println("disconnecting.");
+    if (DEBUG) Serial.println();
+    if (DEBUG) Serial.println("disconnecting.");
     client.stop();
+  client.flush();
   }
 
   if(!client.connected() && (millis() - lastConnectionTime > postingInterval)) {
@@ -87,7 +96,7 @@ void loop() {
 
 void httpRequest() {
   if (client.connect(server, 80)) {
-    Serial.println("connecting...");
+    if (DEBUG) Serial.println("connecting...");
     client.println("GET / HTTP/1.1");
     client.print("Host: ");
     client.println(server);
@@ -97,22 +106,18 @@ void httpRequest() {
 
     lastConnectionTime = millis();
   } else {
-    Serial.println("connection failed");
-    Serial.println("disconnecting.");
+    if (DEBUG) Serial.println("connection failed");
+    if (DEBUG) Serial.println("disconnecting.");
     client.stop();
   }
 }
 
 void alarm() {
-  Serial.println("alarm");
+  if (DEBUG) Serial.println("alarm");
   digitalWrite(output_pin, HIGH);
   
   //10 sec alarm
   delay(10000);
   digitalWrite(output_pin, LOW);
 }
-
-
-
-
 
