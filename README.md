@@ -15,7 +15,7 @@ IPAddress subnet(255, 255, 255, 0);
 
 ###and deploy server
 ```
-char server[] = "xxx.baixing.com";
+char server[] = "deploy.baixing.com";
 ```
 
 ###other settings
